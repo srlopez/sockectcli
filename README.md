@@ -1,17 +1,6 @@
 # sockectcli
 
-A new Flutter project.
+Ejemplo de Cliente socket que se conecta con el servidor en:
+https://github.com/srlopez/dartsocket.git
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-"# socketser" 
+Si ejecutar en el emulador y el servidor en local conectarse a 10.0.2.2
