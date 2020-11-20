@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -41,7 +42,7 @@ class SocketClientState extends State<SocketClient> {
   TextEditingController ipCon = TextEditingController();
   TextEditingController msgCon = TextEditingController();
 
-  Socket clientSocket;
+  Socket socket;
 
   @override
   void initState() {
@@ -113,9 +114,8 @@ class SocketClientState extends State<SocketClient> {
               fillColor: Colors.grey[50]),
         ),
         trailing: RaisedButton(
-          child: Text((clientSocket != null) ? "Disconnect" : "Connect"),
-          onPressed:
-              (clientSocket != null) ? disconnectFromServer : connectToServer,
+          child: Text((socket != null) ? "Disconnect" : "Connect"),
+          onPressed: (socket != null) ? disconnectFromServer : connectToServer,
         ),
       ),
     );
@@ -129,7 +129,7 @@ class SocketClientState extends State<SocketClient> {
           itemBuilder: (context, index) {
             MessageItem item = items[index];
             return Container(
-              alignment: (item.owner == localIP)
+              alignment: (item.owner == 'yo')
                   ? Alignment.centerRight
                   : Alignment.centerLeft,
               child: Container(
@@ -138,14 +138,14 @@ class SocketClientState extends State<SocketClient> {
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    color: (item.owner == localIP)
+                    color: (item.owner == 'yo')
                         ? Colors.blue[100]
                         : Colors.grey[200]),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      (item.owner == localIP) ? "Client" : "Server",
+                      (item.owner == 'yo') ? "Client" : item.owner,
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     Text(
@@ -170,39 +170,64 @@ class SocketClientState extends State<SocketClient> {
           icon: Icon(Icons.send),
           color: Colors.blue,
           disabledColor: Colors.grey,
-          onPressed: (clientSocket != null) ? submitMessage : null,
+          onPressed: (socket != null) ? submitMessage : null,
         ),
       ),
     );
   }
 
   void connectToServer() async {
-    print("Destination Address: ${ipCon.text}");
+    print('conectando ...');
     _storeServerIP();
 
     Socket.connect(ipCon.text, port, timeout: Duration(seconds: 5))
-        .then((socket) {
+        .then((misocket) {
       setState(() {
-        clientSocket = socket;
+        socket = misocket;
       });
-
+      print(
+          "connected to ${socket.remoteAddress.address}:${socket.remotePort}");
+      // Nos presentamos al servidor
+      sendMsg('LOGIN', 'MOVIL');
       showSnackBarWithKey(
-          "Connected to ${socket.remoteAddress.address}:${socket.remotePort}");
+          "connected to ${socket.remoteAddress.address}:${socket.remotePort}");
       socket.listen(
-        (onData) {
-          print(String.fromCharCodes(onData).trim());
-          setState(() {
-            items.insert(
-                0,
-                MessageItem(clientSocket.remoteAddress.address,
-                    String.fromCharCodes(onData).trim()));
-          });
-        },
+        (data) => onData(utf8.decode(data)),
+        //(data) => onData(String.fromCharCodes(data).trim()),
+        //(data) => onData(String(decoding: data,as: UTF8.self).trim()),
         onDone: onDone,
         onError: onError,
       );
     }).catchError((e) {
       showSnackBarWithKey(e.toString());
+    });
+  }
+
+  void onData(json) {
+    var data = jsonDecode(json);
+    print('onData: $data');
+    setState(() {
+      Map msg = jsonDecode(json);
+
+      switch (msg["action"]) {
+        case 'CLIENT_COUNTER':
+          setState(() {
+            items.insert(0, MessageItem('Client#', data['value']));
+          });
+
+          break;
+        case 'MSG':
+          setState(() {
+            items.insert(0, MessageItem(data['from'], data['value']));
+          });
+
+          break;
+        default:
+          {
+            print('No reconocido: $data');
+          }
+          break;
+      }
     });
   }
 
@@ -218,16 +243,22 @@ class SocketClientState extends State<SocketClient> {
   }
 
   void disconnectFromServer() {
+    sendMsg('QUIT', '');
     print("disconnectFromServer");
 
-    clientSocket.close();
+    socket.close();
     setState(() {
-      clientSocket = null;
+      socket = null;
     });
   }
 
-  void sendMessage(String message) {
-    clientSocket.write("$message\n");
+  void sendMsg(String action, dynamic value, [Map data = const {}]) {
+    var msg = Map();
+    msg["action"] = action;
+    msg["value"] = value.toString();
+    msg.addAll(data);
+
+    socket?.write('${jsonEncode(msg)}');
   }
 
   void _storeServerIP() async {
@@ -244,11 +275,17 @@ class SocketClientState extends State<SocketClient> {
 
   void submitMessage() {
     if (msgCon.text.isEmpty) return;
-    setState(() {
-      items.insert(0, MessageItem(localIP, msgCon.text));
-    });
-    sendMessage(msgCon.text);
+    var msg = msgCon.text;
     msgCon.clear();
+
+    setState(() {
+      items.insert(0, MessageItem('yo', msg));
+    });
+
+    if (msg.indexOf('@') > -1)
+      sendMsg('MSG', msg.split('@')[0], {'to': msg.split('@')[1]});
+    else
+      sendMsg('MSG', msg, {'to': 'ALL'});
   }
 
   showSnackBarWithKey(String message) {
