@@ -43,6 +43,8 @@ class SocketClientState extends State<SocketClient> {
   TextEditingController msgCon = TextEditingController();
 
   Socket socket;
+  var alias = 'soymovil';
+  var logincontroller = TextEditingController(text: 'soymovil');
 
   @override
   void initState() {
@@ -70,10 +72,10 @@ class SocketClientState extends State<SocketClient> {
   Widget build(BuildContext context) {
     return Scaffold(
         key: scaffoldKey,
-        appBar: AppBar(title: Text("Socket Client")),
+        appBar: AppBar(title: Text("Socket Client $localIP")),
         body: Column(
           children: <Widget>[
-            ipInfoArea(),
+            loginArea(),
             connectArea(),
             messageListArea(),
             submitArea(),
@@ -81,12 +83,18 @@ class SocketClientState extends State<SocketClient> {
         ));
   }
 
-  Widget ipInfoArea() {
-    return Card(
-      child: ListTile(
-        dense: true,
-        leading: Text("IP"),
-        title: Text(localIP),
+  Widget loginArea() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18.0, 5, 8, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Alias/Login/Nick:',
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          TextField(
+            controller: logincontroller,
+          ),
+        ],
       ),
     );
   }
@@ -145,7 +153,7 @@ class SocketClientState extends State<SocketClient> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      (item.owner == 'yo') ? "Client" : item.owner,
+                      (item.owner == 'yo') ? alias : item.owner,
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     Text(
@@ -179,6 +187,7 @@ class SocketClientState extends State<SocketClient> {
   void connectToServer() async {
     print('conectando ...');
     _storeServerIP();
+    alias = logincontroller.text;
 
     Socket.connect(ipCon.text, port, timeout: Duration(seconds: 5))
         .then((misocket) {
@@ -188,7 +197,7 @@ class SocketClientState extends State<SocketClient> {
       print(
           "connected to ${socket.remoteAddress.address}:${socket.remotePort}");
       // Nos presentamos al servidor
-      sendMsg('LOGIN', 'MOVIL');
+      sendMsg('LOGIN', alias);
       showSnackBarWithKey(
           "connected to ${socket.remoteAddress.address}:${socket.remotePort}");
       socket.listen(
@@ -212,7 +221,8 @@ class SocketClientState extends State<SocketClient> {
       switch (msg["action"]) {
         case 'CLIENT_COUNTER':
           setState(() {
-            items.insert(0, MessageItem('Client#', data['value']));
+            items.insert(
+                0, MessageItem('INFO', 'conectados ${data["value"]} clientes'));
           });
 
           break;
@@ -288,7 +298,7 @@ class SocketClientState extends State<SocketClient> {
       sendMsg('MSG', msg, {'to': 'ALL'});
   }
 
-  showSnackBarWithKey(String message) {
+  void showSnackBarWithKey(String message) {
     scaffoldKey.currentState
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
