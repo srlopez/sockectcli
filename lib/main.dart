@@ -222,7 +222,11 @@ class SocketClientState extends State<SocketClient> {
         case 'CLIENT_COUNTER':
           setState(() {
             items.insert(
-                0, MessageItem('INFO', 'conectados ${data["value"]} clientes'));
+                0,
+                MessageItem(
+                  'INFO',
+                  'conectados ${data["value"]} clientes\n${data["clients"]}',
+                ));
           });
 
           break;
