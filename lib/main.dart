@@ -89,8 +89,7 @@ class SocketClientState extends State<SocketClient> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Alias/Login/Nick:',
-              style: TextStyle(fontWeight: FontWeight.bold)),
+          Text('Login:', style: TextStyle(fontWeight: FontWeight.bold)),
           TextField(
             controller: logincontroller,
           ),
@@ -174,11 +173,13 @@ class SocketClientState extends State<SocketClient> {
         title: TextField(
           controller: msgCon,
         ),
-        trailing: IconButton(
-          icon: Icon(Icons.send),
-          color: Colors.blue,
-          disabledColor: Colors.grey,
+        trailing: RawMaterialButton(
           onPressed: (socket != null) ? submitMessage : null,
+          //elevation: 1.0,
+          fillColor: Colors.green[200],
+          child: Icon(Icons.send, color: Colors.white),
+          padding: EdgeInsets.all(10.0),
+          shape: CircleBorder(),
         ),
       ),
     );
