@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         title: 'Flutter Demo',
         theme: ThemeData(
-          primarySwatch: Colors.blue,
+          primarySwatch: Colors.lightGreen,
         ),
         home: SocketClient());
   }
@@ -146,18 +146,19 @@ class SocketClientState extends State<SocketClient> {
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     color: (item.owner == 'yo')
-                        ? Colors.blue[100]
-                        : Colors.grey[200]),
+                        ? Colors.lightGreen
+                        : Colors.grey[400]),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
                       (item.owner == 'yo') ? alias : item.owner,
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.white70),
                     ),
                     Text(
                       item.content,
-                      style: TextStyle(fontSize: 18),
+                      style: TextStyle(fontSize: 18, color: Colors.white),
                     ),
                   ],
                 ),
@@ -173,14 +174,29 @@ class SocketClientState extends State<SocketClient> {
         title: TextField(
           controller: msgCon,
         ),
-        trailing: RawMaterialButton(
-          onPressed: (socket != null) ? submitMessage : null,
-          //elevation: 1.0,
-          fillColor: Colors.green[200],
-          child: Icon(Icons.send, color: Colors.white),
-          padding: EdgeInsets.all(10.0),
-          shape: CircleBorder(),
+        contentPadding: EdgeInsets.fromLTRB(10, 0, 0, 0),
+        trailing: Ink(
+          decoration: const ShapeDecoration(
+            color: Colors.lightGreen,
+            shape: CircleBorder(),
+          ),
+          child: IconButton(
+            iconSize: 30,
+            icon: Icon(Icons.send),
+            color: Colors.white,
+            onPressed: (socket != null) ? submitMessage : null,
+            padding: EdgeInsets.fromLTRB(3, 0, 0, 0.0),
+          ),
         ),
+
+        // IconButton(
+        //   onPressed: (socket != null) ? submitMessage : null,
+        //   //fillColor: Colors.green[200],
+        //   icon: Icon(Icons.send, color: Colors.green),
+        //   //
+        //   //padding: EdgeInsets.fromLTRB(5, 0, 0, 0.0),
+        //   //shape: CircleBorder(),
+        // ),
       ),
     );
   }
